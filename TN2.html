@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEM PRO: Phản ứng Hồ Tinh Bột & Iot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --glass-panel: rgba(30, 41, 59, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-blue: #38bdf8;
+            --accent-purple: #818cf8;
+            --text-main: #f8fafc;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: var(--text-main);
+            margin: 0; height: 100vh; display: flex; overflow: hidden;
+        }
+
+        .container { display: flex; width: 100%; height: 100%; }
+        
+        /* --- KHU VỰC THÍ NGHIỆM --- */
+        .left-stage { 
+            flex: 2; position: relative; display: flex; 
+            flex-direction: column; align-items: center; justify-content: center; 
+            border-right: 1px solid var(--glass-border); 
+        }
+
+        .header-box { position: absolute; top: 20px; text-align: center; z-index: 10; }
+        .badge { background: linear-gradient(45deg, var(--accent-blue), var(--accent-purple)); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { margin: 10px 0; font-size: 1.8rem; text-shadow: 0 0 20px rgba(129, 140, 248, 0.5); }
+
+        .apparatus { position: relative; width: 140px; height: 320px; display: flex; justify-content: center; margin-bottom: 20px; }
+        .test-tube {
+            position: absolute; bottom: 80px; width: 55px; height: 200px;
+            border: 2px solid rgba(255,255,255,0.3); border-radius: 0 0 28px 28px;
+            background: rgba(255,255,255,0.05); overflow: hidden; z-index: 5;
+            box-shadow: inset 5px 0 10px rgba(255,255,255,0.1);
+        }
+        .liquid { 
+            position: absolute; bottom: 0; width: 100%; height: 0; 
+            transition: all 1.2s ease-in-out; background: transparent;
+        }
+        .bubbles { position: absolute; bottom: 0; width: 100%; height: 100%; display: none; }
+        .bubble {
+            position: absolute; background: rgba(255,255,255,0.4); border-radius: 50%;
+            animation: rise 2s infinite ease-in; bottom: 0;
+        }
+        @keyframes rise { 0% { bottom: 0; opacity: 0; } 50% { opacity: 1; } 100% { bottom: 100%; opacity: 0; } }
+        
+        .burner { position: absolute; bottom: 0; width: 70px; height: 50px; background: #334155; border-radius: 8px; border-top: 4px solid #475569; z-index: 2; }
+        .flame {
+            position: absolute; top: -40px; left: 25px; width: 20px; height: 40px;
+            background: radial-gradient(ellipse, #fef08a, #ea580c, transparent);
+            border-radius: 50% 50% 20% 20%; filter: blur(3px); opacity: 0; transition: 0.5s;
+            animation: flicker 0.1s infinite alternate;
+        }
+        @keyframes flicker { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+        /* --- BẢN CHẤT PHẢN ỨNG --- */
+        .reaction-box {
+            width: 85%; background: var(--glass-panel); backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border); border-top: 3px solid var(--accent-purple);
+            padding: 15px; border-radius: 15px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .reaction-title { color: var(--accent-blue); font-weight: 600; margin-bottom: 10px; display: block; font-size: 0.9rem; text-transform: uppercase; }
+        .reaction-eq { 
+            font-size: 1.1rem; display: flex; align-items: center; justify-content: center; 
+            gap: 12px; font-weight: 500; color: #fff;
+        }
+        .arrow-container { display: flex; flex-direction: column; align-items: center; min-width: 80px; }
+
+        /* --- BẢNG ĐIỀU KHIỂN --- */
+        .right-panel { flex: 1; background: var(--glass-panel); backdrop-filter: blur(12px); padding: 25px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+        .panel-title { color: var(--accent-blue); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; font-weight: 800; }
+        .action-card {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 15px;
+            transition: 0.3s; color: inherit; text-align: left; width: 100%;
+        }
+        .action-card:hover:not(:disabled) { background: rgba(255,255,255,0.1); transform: translateX(-5px); border-color: var(--accent-blue); }
+        .action-card:disabled { opacity: 0.3; cursor: not-allowed; }
+        .action-card.active { border-color: var(--success); background: rgba(34, 197, 94, 0.1); }
+        .icon-box { font-size: 1.5rem; background: rgba(0,0,0,0.2); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+
+        /* --- THÔNG TIN GIẢI THÍCH --- */
+        .explainer {
+            position: absolute; left: 30px; top: 40%; width: 260px;
+            background: rgba(15, 23, 42, 0.95); border-left: 4px solid var(--accent-purple);
+            padding: 20px; border-radius: 0 15px 15px 0; font-size: 0.9rem;
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.5); opacity: 0; transition: 0.5s; pointer-events: none;
+        }
+
+        /* --- QUIZ --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100; display: none;
+            justify-content: center; align-items: center;
+        }
+        .quiz-box { background: #1e293b; width: 450px; padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border); text-align: center; }
+        .option-btn { width: 100%; margin: 5px 0; padding: 12px; background: #334155; border: none; color: white; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .option-btn:hover { background: var(--accent-blue); color: #000; }
+        .correct { background: var(--success) !important; }
+        .wrong { background: var(--danger) !important; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); box-shadow: 0 0 20px var(--accent-blue); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left-stage">
+        <div class="header-box">
+            <span class="badge">STEM Lab Pro</span>
+            <h1>PHẢN ỨNG MÀU IOT - TINH BỘT</h1>
+        </div>
+
+        <div id="info-box" class="explainer">
+            <strong id="info-title" style="color: var(--accent-blue); display: block; margin-bottom: 8px;"></strong>
+            <span id="info-desc"></span>
+        </div>
+
+        <div class="apparatus">
+            <div class="test-tube">
+                <div id="liquid" class="liquid"></div>
+                <div class="bubbles" id="bubbles">
+                    <div class="bubble" style="left:20%; width:4px; height:4px; animation-duration:1.5s"></div>
+                    <div class="bubble" style="left:50%; width:6px; height:6px; animation-duration:2s"></div>
+                </div>
+            </div>
+            <div class="burner"><div class="flame" id="flame"></div></div>
+        </div>
+
+        <div class="reaction-box">
+            <span class="reaction-title">Cấu chế phản ứng tạo phức</span>
+            <div class="reaction-eq">
+                <span>Amylozơ <small style="color: #94a3b8;">(xoắn)</small></span>
+                <span>+ I₂</span>
+                <div class="arrow-container">
+                    <small style="color: var(--accent-blue); font-size: 0.65rem;">t° thường</small>
+                    <div style="font-size: 1.6rem; margin: -6px 0;">⇌</div>
+                    <small style="color: #f59e0b; font-size: 0.65rem;">t° cao</small>
+                </div>
+                <span style="color: var(--accent-purple); font-weight: bold;">Phức xanh tím</span>
+            </div>
+            <small style="color: #64748b; display: block; margin-top: 10px; font-style: italic;">* Iot bị hấp phụ vào lỗ rỗng của mạch xoắn amylozơ.</small>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="panel-title">THIẾT LẬP THÍ NGHIỆM</div>
+        
+        <button class="action-card" id="btn1" onclick="stepAddStarch()">
+            <div class="icon-box">🍚</div>
+            <div><strong>1. Hồ Tinh Bột</strong><br><small>Chuẩn bị dung dịch keo</small></div>
+        </button>
+
+        <button class="action-card" id="btn2" onclick="stepAddIodine()" disabled>
+            <div class="icon-box" style="color: #8b5cf6;">💧</div>
+            <div><strong>2. Nhỏ dung dịch Iot</strong><br><small>Tạo phức chất màu</small></div>
+        </button>
+
+        <button class="action-card" id="btn3" onclick="stepHeat()" disabled>
+            <div class="icon-box" style="color: #f59e0b;">🔥</div>
+            <div><strong>3. Đun nóng ống nghiệm</strong><br><small>Giải phóng phân tử Iot</small></div>
+        </button>
+
+        <button class="action-card" id="btn4" onclick="stepCool()" disabled>
+            <div class="icon-box" style="color: #38bdf8;">❄️</div>
+            <div><strong>4. Để nguội</strong><br><small>Tái lập cấu trúc xoắn</small></div>
+        </button>
+
+        <div style="margin-top: auto; padding-top: 20px;">
+            <button id="btn-quiz" onclick="startQuiz()" disabled style="width:100%; padding:15px; border-radius:10px; border:none; background:linear-gradient(90deg, #3b82f6, #8b5cf6); color:white; font-weight:bold; cursor:pointer;">📝 KIỂM TRA KIẾN THỨC</button>
+            <button onclick="location.reload()" style="width:100%; margin-top:10px; background:none; border:1px solid #475569; color:#94a3b8; padding:8px; border-radius:8px; cursor:pointer;">Làm lại từ đầu</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="quiz-modal">
+    <div class="quiz-box">
+        <h3 id="q-title" style="color: var(--accent-blue);">Câu hỏi 1</h3>
+        <p id="q-text" style="font-size: 1.1rem; margin-bottom: 20px;"></p>
+        <div id="q-options"></div>
+        <div id="q-result" style="display:none; margin-top:20px;">
+            <h2 id="final-score"></h2>
+            <button onclick="location.reload()" style="padding:10px 20px; background:var(--success); border:none; color:white; border-radius:5px; cursor:pointer;">Hoàn thành</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const liq = document.getElementById('liquid');
+    const flm = document.getElementById('flame');
+    const bub = document.getElementById('bubbles');
+    const info = document.getElementById('info-box');
+
+    function showInfo(t, d) {
+        info.style.opacity = '1';
+        document.getElementById('info-title').innerText = t;
+        document.getElementById('info-desc').innerHTML = d;
+    }
+
+    function stepAddStarch() {
+        liq.style.height = '45%';
+        liq.style.background = 'rgba(248, 250, 252, 0.8)';
+        showInfo("Bước 1: Hồ tinh bột", "Tinh bột trong nước nóng tạo thành dung dịch keo. Amylozơ có cấu trúc mạch không phân nhánh, xoắn lại thành hình lò xo.");
+        document.getElementById('btn1').disabled = true; document.getElementById('btn1').classList.add('active');
+        document.getElementById('btn2').disabled = false;
+    }
+
+    function stepAddIodine() {
+        liq.style.background = 'radial-gradient(circle, #2e1065, #0f172a)';
+        liq.style.boxShadow = '0 0 20px #4c1d95';
+        showInfo("Bước 2: Phản ứng màu", "Các phân tử Iot (I₂) chui vào lòng mạch xoắn của Amylozơ tạo thành phức chất có màu xanh tím đặc trưng.");
+        document.getElementById('btn2').disabled = true; document.getElementById('btn2').classList.add('active');
+        document.getElementById('btn3').disabled = false;
+    }
+
+    function stepHeat() {
+        flm.style.opacity = '1';
+        showInfo("Bước 3: Đun nóng", "Nhiệt độ tăng làm các chuỗi Amylozơ duỗi thẳng ra, phân tử Iot bị đẩy ra ngoài khiến màu xanh tím biến mất.");
+        setTimeout(() => {
+            bub.style.display = 'block';
+            liq.style.background = 'rgba(248, 250, 252, 0.5)';
+            liq.style.boxShadow = 'none';
+            document.getElementById('btn3').disabled = true; document.getElementById('btn3').classList.add('active');
+            document.getElementById('btn4').disabled = false;
+        }, 2000);
+    }
+
+    function stepCool() {
+        flm.style.opacity = '0'; bub.style.display = 'none';
+        showInfo("Bước 4: Làm lạnh", "Khi để nguội, các mạch tinh bột tự động xoắn lại cấu trúc ban đầu và tiếp tục hấp phụ Iot.");
+        setTimeout(() => {
+            liq.style.background = 'radial-gradient(circle, #2e1065, #0f172a)';
+            liq.style.boxShadow = '0 0 20px #4c1d95';
+            document.getElementById('btn4').disabled = true; document.getElementById('btn4').classList.add('active');
+            document.getElementById('btn-quiz').disabled = false;
+            document.getElementById('btn-quiz').style.animation = 'pulse 1.5s infinite';
+        }, 2000);
+    }
+
+    // --- QUIZ LOGIC ---
+    const qData = [
+        { q: "Tại sao tinh bột tạo màu xanh tím với Iot?", a: ["Phản ứng hóa học tạo chất mới", "Iot bị hấp phụ vào cấu trúc xoắn", "Iot bị oxi hóa", "Tinh bột bị thủy phân"], c: 1 },
+        { q: "Khi đun nóng ống nghiệm, hiện tượng gì xảy ra?", a: ["Màu xanh tím đậm hơn", "Có kết tủa trắng", "Màu xanh tím mất đi", "Dung dịch chuyển sang màu đỏ"], c: 2 },
+        { q: "Màu xanh tím xuất hiện lại khi nào?", a: ["Khi thêm NaOH", "Khi để nguội dung dịch", "Khi đun sôi mạnh hơn", "Khi thêm nước"], c: 1 }
+    ];
+    let curQ = 0, score = 0;
+    function startQuiz() { document.getElementById('quiz-modal').style.display = 'flex'; loadQ(); }
+    function loadQ() {
+        const d = qData[curQ];
+        document.getElementById('q-title').innerText = `Câu hỏi ${curQ+1}/3`;
+        document.getElementById('q-text').innerText = d.q;
+        const opt = document.getElementById('q-options'); opt.innerHTML = '';
+        d.a.forEach((t, i) => {
+            const b = document.createElement('button'); b.className = 'option-btn'; b.innerText = t;
+            b.onclick = () => {
+                if(i === d.c) { b.classList.add('correct'); score++; } else { b.classList.add('wrong'); }
+                setTimeout(() => { curQ++; if(curQ < 3) loadQ(); else showEnd(); }, 1000);
+            };
+            opt.appendChild(b);
+        });
+    }
+    function showEnd() {
+        document.getElementById('q-text').style.display = 'none';
+        document.getElementById('q-options').style.display = 'none';
+        document.getElementById('q-result').style.display = 'block';
+        document.getElementById('final-score').innerText = `Kết quả: ${score}/3 điểm`;
+    }
+</script>
+</body>
+</html>
